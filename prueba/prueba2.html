@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gaussian Distributions</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-container {
+            flex: 1;
+            padding: 20px;
+        }
+
+        #chart {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .slider-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #image-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        #image {
+            max-width: 70%;
+            display: block;
+            margin: 0 auto;
+            width: 70%;
+        }
+
+        /* Increase font size for labels and value */
+        label, #bar-separation-value {
+            font-size: 18px;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="slider-container">
+            <label for="bar-separation-slider">Criterion Distance:</label>
+            <input type="range" id="bar-separation-slider" min="0" max="6" step="0.1" value="0">
+            <span id="bar-separation-value">0</span>
+        </div>
+        <div class="chart-container">
+            <div id="chart"></div>
+        </div>
+    </div>
+    <div id="image-container">
+        <img src="imagen_0.jpg" alt="Image 0" id="image">
+    </div>
+
+    <script>
+        // Generate data for the distributions
+        var x = [];
+        for (var i = -5; i <= 5; i += 0.1) {
+            x.push(i);
+        }
+
+        var yTarget = x.map(function (x) {
+            return 1 / Math.sqrt(2 * Math.PI) * Math.exp(-0.5 * Math.pow((x - 3) / 1, 2));
+        });
+
+        var yDistractor = x.map(function (x) {
+            return 1 / Math.sqrt(2 * Math.PI) * Math.exp(-0.5 * Math.pow((x - 0) / 1, 2));
+        });
+
+        // Configure the trace for the target distribution (mean 3)
+        var traceTarget = {
+            x: x,
+            y: yTarget,
+            mode: 'lines',
+            name: 'Target (mean 3)',
+        };
+
+        // Configure the trace for the distractor distribution (mean 0)
+        var traceDistractor = {
+            x: x,
+            y: yDistractor,
+            mode: 'lines',
+            name: 'Distractor (mean 0)',
+        };
+
+        // Initialize the position of the bars and separation
+        var initialSeparation = 0.5; // Initial separation value
+        var separation = initialSeparation;
+
+        // Function to update the chart with the new separation
+        function updateChart() {
+            var lowCriterion = 1 - separation / 2;
+            var highCriterion = 1 + separation / 2;
+
+            // Update the position of the vertical bars
+            verticalLines[0].x = [lowCriterion, lowCriterion];
+            verticalLines[1].x = [highCriterion, highCriterion];
+
+            // Create the chart
+            var data = [traceTarget, traceDistractor, ...verticalLines];
+            var layout = {
+                xaxis: {
+                    title: 'Values',
+                },
+                yaxis: {
+                    title: 'Probability Density',
+                },
+            };
+
+            Plotly.newPlot('chart', data, layout);
+
+            // Update the image based on the position of the slider
+            updateImage();
+        }
+
+        // Configure the initial vertical bars
+        var verticalLines = [
+            {
+                x: [1 - initialSeparation / 2, 1 - initialSeparation / 2],
+                y: [0, 0.4],
+                type: 'scatter',
+                mode: 'lines',
+                line: {
+                    color: 'red',
+                    width: 2,
+                },
+                name: 'Low Criterion',
+            },
+            {
+                x: [1 + initialSeparation / 2, 1 + initialSeparation / 2],
+                y: [0, 0.4],
+                type: 'scatter',
+                mode: 'lines',
+                line: {
+                    color: 'blue',
+                    width: 2,
+                },
+                name: 'High Criterion',
+            },
+        ];
+
+        // Initialize the chart
+        updateChart();
+
+        // Handle changes in the slider
+        var slider = document.getElementById('bar-separation-slider');
+        var separationValue = document.getElementById('bar-separation-value');
+
+        slider.addEventListener('input', function () {
+            separation = parseFloat(this.value);
+            separationValue.textContent = separation.toFixed(1);
+            updateChart();
+        });
+
+        // Function to update the image based on the slider position
+        function updateImage() {
+            var image = document.getElementById('image');
+            var imageName;
+
+            if (separation === 0) {
+                imageName = 'imagen_0.jpg';
+            } else if (separation === 6) {
+                imageName = 'imagen_inf.jpg';
+            } else {
+                imageName = 'imagen_omega.jpg';
+            }
+
+            image.src = imageName;
+            image.alt = 'Image ' + imageName;
+        }
+    </script>
+</body>
+</html>
